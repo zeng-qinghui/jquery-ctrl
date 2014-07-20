@@ -1,0 +1,27 @@
+{
+  "name": "ctrl",
+  "title": "jQuery Ctrl",
+  "description": "A simple, lightweight jQuery plugin for model binding",
+  "version": "0.1.0",
+  "homepage": "https://github.com/zengohm/jquery-ctrl",
+  "author": {
+    "name": "Zeng Ohm",
+    "email": "zengohm@gmail.com",
+    "url": "https://github.com/zengohm"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zengohm/jquery-ctrl.git"
+  },
+  "bugs": "https://github.com/zengohm/jquery-ctrl/issues",
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/zengohm/jquery-ctrl/blob/master/LICENSE-MIT"
+    }
+  ],
+  "dependencies": {
+    "jquery": ">=1.2"
+  },
+  "keywords": []
+}
