@@ -22,6 +22,7 @@
       <div id="qunit-binding">
           <input title="{{testBinding}}" type="text" jq-model="testBinding" />
           <i>{{testBinding}}</i>
+          <!-- coomit -->
       </div>
       <div id="qunit-if">
           <div jq-if="testNum > 0">True</div>
@@ -33,14 +34,14 @@
           </ul>
       </div>
       <div id="qunit-options">
-          <select jq-model="testSelect" jq-options="o.key,o.value for o in testOptions"></select>
+          <select jq-model="testSelect" jq-options="testOptions"></select>
           <i>{{testSelect}}</i>
       </div>
       <div id="qunit-src">
-          <img jq-src="testSrc" />
+          <img jq-src="{{testSrc}}" />
       </div>
       <div id="qunit-href">
-          <a jq-href="testHref">Github</a>
+          <a jq-href="{{testHref}}">Github</a>
       </div>
       <div id="qunit-disabled">
           <button jq-disabled="testDisabled">Disabled</button>

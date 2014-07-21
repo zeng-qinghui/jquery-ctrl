@@ -34,11 +34,7 @@
                     {key: 'Row2', value: 'Row2Value'}
                 ];
 
-                model.testOptions = [
-                    {key: 'Row0', value: 'Row0Value'},
-                    {key: 'Row1', value: 'Row1Value'},
-                    {key: 'Row2', value: 'Row2Value'}
-                ];
+                model.testOptions = ['Row0','Row1','Row2'];
                 model.testSelect = 'Row1';
 
                 model.testSrc = 'http://jquery.com/jquery-wp-content/themes/jquery/images/logo-jquery.png';
@@ -53,7 +49,7 @@
     });
 
     test('Ctrl', function () {
-        expect(13);
+        expect(12);
         // Not a bad test to run on collection methods.
         strictEqual($('#qunit-binding input').val(), 'Binding Success', 'Input binding');
         strictEqual($('#qunit-binding i').text(), 'Binding Success', 'Html binding');
@@ -61,9 +57,7 @@
         $('#qunit-binding input').change();
         strictEqual($('#qunit-binding i').text(), 'Binding and Update Success', 'Html binding update');
 
-        strictEqual($('#qunit-if').text(), 'True', 'If');
-
-        strictEqual($('#qunit-repeat li').length, 3, 'Repeat');
+        strictEqual($('#qunit-if>div').text(), 'True', 'If');
 
         strictEqual($('#qunit-repeat li').length, 3, 'Repeat');
 
@@ -77,9 +71,9 @@
 
         strictEqual($('#qunit-href a').attr('href'), 'http://jquery.com/', 'Href');
 
-        strictEqual($('#qunit-disabled button').attr('disabled'), true, 'Disabled');
+        strictEqual($('#qunit-disabled button').attr('disabled'), 'disabled', 'Disabled');
 
-        strictEqual($('#qunit-style div').css('color'), '#0F0', 'Css');
+        strictEqual($('#qunit-style div').css('color'), 'rgb(0, 255, 0)', 'Css');
     });
 
 }(jQuery));
