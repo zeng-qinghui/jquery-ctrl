@@ -195,9 +195,7 @@
         if(typeof(element.getAttribute)!=='function' || !(query = element.getAttribute('jq-if'))){
             return NODE_STATUS_NORMAL;
         }
-        query = query.replace(/\w+/,function(match){
-            return 'model["'+match+'"]';
-        });
+
         var startComment = document.createComment('jq-if '+query+' start');
         var endComment = document.createComment('jq-if '+query+' end');
         var parent = $(element).parent()[0];
@@ -209,7 +207,7 @@
         }
         onChangeTasks.push(function(){
             $(element).remove();
-            if(eval(query)){
+            if(model[query]){
                 $(element).insertAfter(startComment);
             }
         });
@@ -235,6 +233,13 @@
             parent.appendChild(endComment);
         }
 
+        var repeatRowDelegate = function(row){
+            return template.replace(/\{\{([\w\.]+)\}\}/g,function(match,key){
+                if(key.substr(0,rowName.length+1) === (rowName+'.')){
+                    return row[key.substr(rowName.length+1)];
+                }
+            });
+        };
 
 
         onChangeTasks.push(function(){
@@ -246,11 +251,7 @@
             var html = '';
             var list = model[modelName];
             for(var i in list){
-                html+= template.replace(/\{\{([\w\.]+)\}\}/g,function(match,key){
-                    if(key.substr(0,rowName.length+1) === (rowName+'.')){
-                        return list[i][key.substr(rowName.length+1)];
-                    }
-                });
+                html+= repeatRowDelegate(list[i]);
             }
             $(html).insertAfter(startComment);
 

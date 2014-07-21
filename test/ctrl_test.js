@@ -26,7 +26,8 @@
             $.ctrl('test', function (model) {
                 model.testBinding = 'Binding Success';
 
-                model.testNum = 1;
+                model.testBoolTrue = true;
+                model.testBoolFalse = false;
 
                 model.testCollections = [
                     {key: 'Row0', value: 'Row0Value'},
