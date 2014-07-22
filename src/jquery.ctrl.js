@@ -6,24 +6,36 @@
  * Licensed under the MIT license.
  */
 
-(function ($) {
+(function (factory) {
+    if (typeof define === 'function' && define.amd) {
+        // AMD
+        define(['jquery'], factory);
+    } else if (typeof exports === 'object') {
+        // CommonJS
+        factory(require('jquery'));
+    } else {
+        // Browser globals
+        factory(jQuery);
+    }
+}(function ($) {
     var NODE_STATUS_NORMAL = 0;
     var NODE_STATUS_COVER = 1;
     var NODE_STATUS_LAST = 2;
 
-    var modules = {};
-
     var bindingTypes = {};
+
+    var createCtrl = function(modelData,$element){
+      return {
+          model:new ModelObject(modelData),
+          ctrl: $element
+      };
+    };
 
     // Static method.
     $.ctrl = function (ctrlName, init) {
-        var thisCtrl = {
-            model: {},
-            init: init,
-            ctrl: $('[jq-ctrl="' + ctrlName + '"]')
-        };
-        modules[ctrlName] = thisCtrl;
-        thisCtrl.init(thisCtrl.model);
+        var modelData = {};
+        init(modelData);
+        var thisCtrl = createCtrl(modelData,$('[jq-ctrl="' + ctrlName + '"]'));
         bindingInit(thisCtrl);
     };
 
@@ -42,7 +54,9 @@
                             break;
                         }
                     }
-                    initElement($(this));
+                    if(!(node_status & NODE_STATUS_COVER)) {
+                        initElement($(this));
+                    }
                 }
             });
         };
@@ -51,11 +65,11 @@
 
 
     bindingTypes.text = function(node,model,onChangeTasks){
-        if(node.nodeName.substr(0,1)==='#' && node.data.match(/\{\{\w+\}\}/)){
+        if(node.nodeName.substr(0,1)==='#' && node.data.match(/\{\{[\w\.]+\}\}/)){
             var template = node.data;
             onChangeTasks.push(function(){
-                node.data = template.replace(/\{\{(\w+)\}\}/g, function (match, key) {
-                    return model[key];
+                node.data = template.replace(/\{\{([\w\.]+)\}\}/g, function (match, key) {
+                    return model.get(key);
                 });
             });
             onChangeTasks[onChangeTasks.length-1]();
@@ -70,11 +84,11 @@
                 if(element === srcElement){
                     return false;
                 }
-                $(element).val(model[modelName]);
+                $(element).val(model.get(modelName));
             });
             onChangeTasks[onChangeTasks.length-1]();
             $(element).bind('keypress change keyup',function(){
-                model[modelName] = $(this).val();
+                model.set(modelName,$(this).val());
                 for(var i in onChangeTasks){
                     onChangeTasks[i](this);
                 }
@@ -90,8 +104,8 @@
         var allowAttributes = ['jq-src','jq-href'];
         var onChangeDelegate = function(element,attribute,template) {
             onChangeTasks.push(function(){
-                element.setAttribute(attribute.substr(3),template.replace(/\{\{(\w+)\}\}/g, function (match, key) {
-                    return model[key];
+                element.setAttribute(attribute.substr(3),template.replace(/\{\{([\w\.]+)\}\}/g, function (match, key) {
+                    return model.get(key);
                 }));
             });
         };
@@ -113,8 +127,8 @@
 
         var onChangeDelegate = function(element,attribute,template) {
             onChangeTasks.push(function () {
-                element.setAttribute(attribute, template.replace(/\{\{(\w+)\}\}/g, function (match, key) {
-                    return model[key];
+                element.setAttribute(attribute, template.replace(/\{\{([\w\.]+)\}\}/g, function (match, key) {
+                    return model.get(key);
                 }));
             });
         };
@@ -125,7 +139,7 @@
             }
             var template = attributes[i].value;
             var attribute = attributes[i].name;
-            if(template.match(/\{\{(\w+)\}\}/)){
+            if(template.match(/\{\{([\w\.]+)\}\}/)){
                 onChangeDelegate(element,attribute,template);
                 onChangeTasks[onChangeTasks.length-1](null);
             }
@@ -138,7 +152,7 @@
             return NODE_STATUS_NORMAL;
         }
         onChangeTasks.push(function () {
-            $(element).css(model[modelName]);
+            $(element).css(model.get(modelName));
         });
         onChangeTasks[onChangeTasks.length-1](null);
         return NODE_STATUS_NORMAL;
@@ -149,7 +163,7 @@
             return NODE_STATUS_NORMAL;
         }
         onChangeTasks.push(function () {
-            $(element).attr('disabled',model[modelName]);
+            $(element).attr('disabled',model.get(modelName));
         });
         onChangeTasks[onChangeTasks.length-1](null);
         return NODE_STATUS_NORMAL;
@@ -176,18 +190,39 @@
         onChangeTasks.push(function(){
             $(element).empty();
             var modelName = element.getAttribute('jq-model');
-            if(keyName === null){
-                for(var i in model[listName]){
-                    $(element).append('<option>' + model[listName][i] + '</option>');
+            var list = model.get(listName);
+            if(list && typeof(list[0])==='object' && Object.keys(list[0]).length===1 && list[0][Object.keys(list[0])[0]]  instanceof Array ) {
+                for (var g in list){
+                    var $group = $('<optgroup></optgroup>');
+                    var groupKey = Object.keys(list[g])[0];
+                    $group.attr('label',groupKey);
+                    var subList = list[g][groupKey];
+                    if(keyName === null){
+                        for(var gi in subList){
+                            $group.append('<option value="'+subList[gi]+'">' + subList[gi] + '</option>');
+                        }
+                    }else{
+                        for (var gk in subList) {
+                            $group.append('<option value="' + subList[gk][keyName] + '">' + subList[gk]['valueName'] + '</option>');
+                        }
+                    }
+                    $(element).append($group);
                 }
             }else{
-                for(var k in model[listName]){
-                    $(element).append('<option value="' + model[listName][k][keyName] + '">' + model[listName][k]['valueName'] + '</option>');
+                if(keyName === null) {
+                    for(var i in list){
+                        $(element).append('<option>' + list[i] + '</option>');
+                    }
+                }else{
+                    for (var k in list) {
+                        $(element).append('<option value="' + list[k][keyName] + '">' + list[k]['valueName'] + '</option>');
+                    }
                 }
             }
-            $(element).val(model[modelName]);
+            $(element).val(model.get(modelName));
         });
         onChangeTasks[onChangeTasks.length-1](null);
+        $(element).removeAttr('jq-options');
         return NODE_STATUS_COVER;
     };
     bindingTypes.jqIf = function(element,model,onChangeTasks){
@@ -207,7 +242,7 @@
         }
         onChangeTasks.push(function(){
             $(element).remove();
-            if(model[query]){
+            if(model.get(query)){
                 $(element).insertAfter(startComment);
             }
         });
@@ -217,7 +252,7 @@
 
     bindingTypes.jqRepeat = function(element,model,onChangeTasks){
         var query, match;
-        if(typeof(element.getAttribute)!=='function' || !(query = element.getAttribute('jq-repeat')) || !(match = query.match(/(\w+)\s+in\s+(\w+)/))){
+        if(typeof(element.getAttribute)!=='function' || !(query = element.getAttribute('jq-repeat')) || !(match = query.match(/(\w+)\s+in\s+([\w\.]+)/))){
             return NODE_STATUS_NORMAL;
         }
         var modelName = match[2];
@@ -233,12 +268,14 @@
             parent.appendChild(endComment);
         }
 
-        var repeatRowDelegate = function(row){
-            return template.replace(/\{\{([\w\.]+)\}\}/g,function(match,key){
-                if(key.substr(0,rowName.length+1) === (rowName+'.')){
-                    return row[key.substr(rowName.length+1)];
-                }
-            });
+        var repeatRowDelegate = function(subModel){
+            var $row = $(template.replace(/\{\{([\w\.]+)\}\}/g,function(match,key){
+                return subModel.get(key)?subModel.get(key):match;
+            }));
+            $row.removeAttr('jq-repeat');
+            var subCtrl = createCtrl(subModel.getData(),$row);
+            bindingInit(subCtrl);
+            return $row;
         };
 
 
@@ -248,16 +285,60 @@
                 currentNode = currentNode.nextSibling;
                 $(currentNode).prev().remove();
             }
-            var html = '';
-            var list = model[modelName];
+            var list = model.get(modelName);
             for(var i in list){
-                html+= repeatRowDelegate(list[i]);
+                var subModel = model.clone();
+                subModel.getData()[rowName] = list[i];
+                repeatRowDelegate(subModel).insertAfter(startComment);
             }
-            $(html).insertAfter(startComment);
 
         });
         onChangeTasks[onChangeTasks.length-1](null);
         return NODE_STATUS_COVER;
     };
 
-}(jQuery));
+    var ModelObject = function(data){
+        if(typeof(data) === 'undefined' || !data){
+            data = {};
+        }
+        var model = data;
+
+        this.set = function(key,value){
+            var keys = key.split('.');
+            var lastKey = keys.pop();
+            var current = model;
+            for(var i in keys){
+                if(typeof(current[keys[i]]) === 'undefined'){
+                    current[keys[i]] = {};
+                }
+                current = current[keys[i]];
+            }
+            current[lastKey] = value;
+            return value;
+        };
+
+        this.get = function(key){
+            var keys = key.split('.');
+            var current = model;
+            for(var i in keys){
+                current = current[keys[i]];
+                if(!current){
+                    return null;
+                }
+            }
+            return current;
+        };
+
+        this.subModel = function(key){
+            return new ModelObject(this.get(key));
+        };
+
+        this.getData = function(){
+            return model;
+        };
+
+        this.clone = function(){
+            return new ModelObject($.extend(true,{},model));
+        };
+    };
+}));

@@ -18,36 +18,63 @@
 </head>
 <body>
   <div id="qunit"></div>
-  <div jq-ctrl="test">
-      <div id="qunit-binding">
-          <input title="{{testBinding}}" type="text" jq-model="testBinding" />
-          <i>{{testBinding}}</i>
-          <!-- coomit -->
+  <div>
+      <div id="qunit-binding" jq-ctrl="test-binding">
+          <div class="common">
+              <input title="{{testBinding}}" type="text" jq-model="testBinding" />
+              <i>{{testBinding}}</i>
+          </div>
+          <div class="object">
+              <input title="{{testObjectBinding.value}}" type="text" jq-model="testObjectBinding.value" />
+              <i>{{testObjectBinding.value}}</i>
+          </div>
       </div>
-      <div id="qunit-if">
-          <div jq-if="testBoolTrue">True</div>
-          <div jq-if="testBoolFalse">False</div>
+      <div id="qunit-if" jq-ctrl="test-if">
+          <div class="common">
+              <div jq-if="testBoolTrue">True</div>
+              <div jq-if="testBoolFalse">False</div>
+          </div>
+          <div class="object">
+              <div jq-if="testBoolObjectTrue.value">True</div>
+              <div jq-if="testBoolObjectFalse.value">False</div>
+          </div>
       </div>
-      <div id="qunit-repeat">
+      <div id="qunit-repeat" jq-ctrl="test-repeat">
           <ul>
               <li jq-repeat="row in testCollections">{{row.key}}:{{row.value}}</li>
           </ul>
+          <ul>
+              <li jq-repeat="obj in testLevelsCollections">
+                  {{obj.key}}:{{obj.row.value}}
+                  <ul>
+                      <li class="sub" jq-repeat="subObj in obj.row.sub">{{subObj.key}}::{{subObj.value}}</li>
+                  </ul>
+              </li>
+          </ul>
       </div>
-      <div id="qunit-options">
-          <select jq-model="testSelect" jq-options="testOptions"></select>
-          <i>{{testSelect}}</i>
+      <div id="qunit-options" jq-ctrl="test-options">
+          <div class="common">
+              <select jq-model="testSelect" jq-options="testOptions"></select>
+              <i>{{testSelect}}</i>
+          </div>
+          <div class="group">
+              <select jq-model="testGroupSelect" jq-options="testGroupOptions"></select>
+              <i>{{testGroupSelect}}</i>
+          </div>
       </div>
-      <div id="qunit-src">
+      <div id="qunit-src_href" jq-ctrl="test-src_href">
           <img jq-src="{{testSrc}}" />
-      </div>
-      <div id="qunit-href">
           <a jq-href="{{testHref}}">Github</a>
+          <img jq-src="{{testObjectSrc.value}}" />
+          <a jq-href="{{testObjectHref.value}}">Github</a>
       </div>
-      <div id="qunit-disabled">
+      <div id="qunit-disabled"  jq-ctrl="test-disabled">
           <button jq-disabled="testDisabled">Disabled</button>
+          <button jq-disabled="testObjectDisabled.value">Disabled</button>
       </div>
-      <div id="qunit-style">
+      <div id="qunit-style" jq-ctrl="test-style">
           <div jq-style="testStyle">jQuery</div>
+          <div jq-style="testObjectStyle.value">jQuery</div>
       </div>
 
   </div>
