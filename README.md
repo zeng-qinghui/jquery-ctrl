@@ -1,4 +1,4 @@
-# jQuery Ctrl
+# jQuery Ctrl [![Build Status](https://travis-ci.org/zengohm/jquery-ctrl.svg?branch=master)](https://travis-ci.org/zengohm/jquery-ctrl)
 
 A simple, lightweight jQuery plugin for model binding
 
