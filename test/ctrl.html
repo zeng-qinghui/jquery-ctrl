@@ -76,7 +76,10 @@
           <div jq-style="testStyle">jQuery</div>
           <div jq-style="testObjectStyle.value">jQuery</div>
       </div>
-
+      <div id="qunit-event" jq-ctrl="test-event">
+          <span>{{message}}</span>
+          <button jq-click="click('OK')">Click Me</button>
+      </div>
   </div>
 </body>
 </html>

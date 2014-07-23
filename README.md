@@ -285,7 +285,7 @@ You will get
 jQuery(function($) {
   $.ctrl('myCtrl',function(model){
     model.style = {color:'#0f0'};
-  }
+  });
 });
 </script>
 ```
@@ -297,3 +297,34 @@ You will get
     <span jq-style="style" style="color:#0f0">jQuery.ctrl</span>
 </div>
 ```
+
+### Event
+Support click, keypress, keyup, keydown, dbclick, mousedown, mouseup, onmouseover, onmousemove, onmouseout
+
+```html
+<div jq-ctrl="myCtrl">
+    Click Times: {{clickTimes}}
+    <button jq-click="click()">Click Me</button>
+</div>
+<script>
+jQuery(function($) {
+  $.ctrl('myCtrl',function(model){
+    model.clickTimes = 0;
+    model.click = function(){
+        model.clickTimes++;
+    };
+  });
+});
+</script>
+```
+
+You will get
+```html
+<div jq-ctrl="myCtrl">
+    Click Times: 0
+    <button jq-click="click()">Click Me</button>
+</div>
+```
+
+The count will plus 1 when you click the button.
+

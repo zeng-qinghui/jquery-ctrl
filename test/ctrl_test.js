@@ -169,4 +169,20 @@
         strictEqual($('#qunit-style div:eq(1)').css('color'), 'rgb(0, 255, 0)', 'Object Css');
     });
 
+    module('Event',{
+        setup:function(){
+            $.ctrl('test-event',function(model){
+                model.message = 'Wait For Click';
+                model.click = function(param){
+                    model.message = 'Clicked with param '+param;
+                };
+            });
+        }
+    });
+
+    test('Event',function(){
+        expect(1);
+        $('#qunit-event button').click();
+        strictEqual($('#qunit-event span').html(),'Clicked with param OK','Event');
+    });
 }(jQuery));
