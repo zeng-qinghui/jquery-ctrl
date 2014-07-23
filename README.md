@@ -44,30 +44,256 @@ The plugin can also be loaded as AMD or CommonJS module.
 
 ## Usage
 
-### String
+### Value
 ```html
 <div jq-ctrl="myCtrl">
   Hello, {{demo}}!
-  <button title="{{btnTitle}}">Button</button>
+  <input type="text" jq-model="demo" />
+  <button title="{{btn.message}}">{{btn.show}}</button>
 </div>
 <script>
 jQuery(function($) {
   $.ctrl('myCtrl',function(model){
     model.demo = 'World';
-    model.btnTitle = 'Click Me!';
+    model.btn = {message:'Click',show:'Click Me!'};
   });
 });
 </script>
 ```
 
-### If
+You will get
+
+```html
+<div jq-ctrl="myCtrl">
+  Hello, World!
+  <input type="text" jq-model="demo" value="World" />
+  <button title="Click">Click Me!</button>
+</div>
+```
+
+If you type in the input, the word 'World' will change on the same time.
+
+### If / Not
+```html
+<div jq-ctrl="myCtrl">
+  I feel
+  <span jq-if="fine">good</span>
+  <span jq-not="fine">not good</span>
+</div>
+<script>
+jQuery(function($) {
+  $.ctrl('myCtrl',function(model){
+    model.fine = true;
+  });
+});
+</script>
+```
+
+Yow will get
+
+```html
+<div jq-ctrl="myCtrl">
+    I feel
+    <span jq-if="fine">good</span>
+</div>
+```
 
 ### Repeat
+```html
+<div jq-ctrl="myCtrl">
+    <ul>
+        <li jq-repeat="num in numbers">{{num}}</li>
+    </ul>
+    <ul>
+        <li jq-repeat="game in games">{{game.id}}:{{game.name}}</li>
+    </ul>
+    <ul>
+        <li jq-repeat="continent in continents">
+            <dl>
+                <dt>{{continent.name}}</dt>
+                <dd jq-repeat="country in continent.countries">{{country}}</dd>
+            </dl>
+        </li>
+    </ul>
+</div>
+<script>
+jQuery(function($) {
+  $.ctrl('myCtrl',function(model){
+    model.numbers = [0,1,2,3];
+    model.games = [{id:'game01',name:'Football'},{id:'game02',name:'Basketball'}];
+    model.continents = [
+        {name:'Asia',countries:['China','Pakistan']},
+        {name:'European',countries:['French','Germany']}
+    ];
+  });
+});
+</script>
+```
+
+You will get
+
+```html
+<div jq-ctrl="myCtrl">
+    <ul>
+        <li>0</li>
+        <li>1</li>
+        <li>2</li>
+        <li>3</li>
+    </ul>
+    <ul>
+        <li>game01:Football</li>
+        <li>game02:Basketball</li>
+    </ul>
+    <ul>
+        <li>
+            <dl>
+                <dt>Asia</dt>
+                <dd>China</dd>
+                <dd>Pakistan</dd>
+            </dl>
+        </li>
+        <li>
+            <dl>
+                <dt>European</dt>
+                <dd>French</dd>
+                <dd>Germany</dd>
+            </dl>
+        </li>
+    </ul>
+</div>
+```
+
 
 ### Options
+```html
+<div jq-ctrl="myCtrl">
+    <dl>
+        <dt>Array</dt>
+        <dd><select jq-model="number" jq-options="numbers"></select></dd>
+        <dd>The number selected is {{number}}.</dd>
+        
+        <dt>Object</dt>
+        <dd><select jq-model="game" jq-options="id,name in games"></select></dd>
+        <dd>The game selected is {{game}}.</dd>
+        
+        <dt>Group</dt>
+        <dd><select jq-model="country" jq-options="countries"></select></dd>
+        <dd>The country selected is {{country}}.</dd>
+    </dl>
+</div>
+<script>
+jQuery(function($) {
+  $.ctrl('myCtrl',function(model){
+    model.numbers = [0,1,2,3];
+    model.number = 2;
+    model.games = [
+	{'id':'game01','name':'Football'},
+	{'id':'game02','name':'Basketball'}
+    ];
+    model.game = 'game02';
+    model.countries = [
+        {'Asia':['China','Pakistan']},
+        {'European':['French','Germany']}
+    ];
+    model.country = 'China';
+  });
+});
+</script>
+```
 
-### Src and href
+You will get
+```html
+<div jq-ctrl="myCtrl">
+    <dl>
+        <dt>Array</dt>
+        <dd>
+            <select jq-model="number">
+                <option>0</option>
+                <option>1</option>
+                <option selected="selected">2</option>
+                <option>3</option>
+            </select>
+        </dd>
+        <dd>The number selected is 2.</dd>
+        
+        <dt>Object</dt>
+        <dd>
+            <select jq-model="game">
+                <option value="game01">Football</option>
+                <option value="game02" selected="selected">Basketball</option>
+            </select>
+         </dd>
+        <dd>The game selected is game02.</dd>
+        
+        <dt>Group</dt>
+        <dd>
+            <select jq-model="country">
+                <optgroup label="Asia">
+                    <option selected="selected">China</option>
+                    <option>Pakistan</option>
+                </optgroup>
+                <optgroup label="European">
+                    <option>French</option>
+                    <option>Germany</option>
+                </optgroup>
+            </select>
+        </dd>
+        <dd>The country selected is China.</dd>
+    </dl>
+</div>
+```
+
+If you change the select, the word will change on the same time.
+
+
+### Src / href / Disabled
+```html
+<div jq-ctrl="myCtrl">
+    <a jq-href="{{jqueryLink}}">
+        <img jq-src="{{jqueryImage}}" />
+    </a>
+    <button jq-disabled="btnDisabled">You cannot click me</button>
+</div>
+<script>
+jQuery(function($) {
+  $.ctrl('myCtrl',function(model){
+    model.jqueryLink = 'http://jquery.com';
+    model.jqueryImage = 'http://jquery.com/jquery-wp-content/themes/jquery/images/logo-jquery.png';
+    model.btnDisabled = true;
+  });
+});
+</script>
+```
+
+You will get
+
+```html
+<div jq-ctrl="myCtrl">
+    <a jq-href="{{jqueryLink}}" href="http://jquery.com">
+        <img jq-src="{{jqueryImage}}" src="http://jquery.com/jquery-wp-content/themes/jquery/images/logo-jquery.png">
+    </a>
+    <button jq-disabled="btnDisabled" disabled="disabled">You cannot click me</button>
+</div>
+```
 
 ### Style
+```html
+<div jq-ctrl="myCtrl">
+    <span jq-style="style">jQuery.ctrl</span>
+</div>
+<script>
+jQuery(function($) {
+  $.ctrl('myCtrl',function(model){
+    model.style = {color:'#0f0'};
+  }
+});
+</script>
+```
 
-### Disabled
+You will get
+
+```html
+<div jq-ctrl="myCtrl">
+    <span jq-style="style" style="color:#0f0">jQuery.ctrl</span>
+</div>
+```

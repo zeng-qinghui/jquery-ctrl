@@ -55,10 +55,8 @@
         setup:function(){
             $.ctrl('test-if',function(model){
                 model.testBoolTrue = true;
-                model.testBoolFalse = false;
 
                 model.testBoolObjectTrue = {value:true};
-                model.testBoolObjectFalse = {value:false};
             });
         }
     });

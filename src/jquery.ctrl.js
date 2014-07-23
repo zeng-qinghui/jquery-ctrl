@@ -175,11 +175,11 @@
         }
         var match;
         var keyName,valueName,listName;
-        if(match = query.match(/(\w+)/)){
+        if(match = query.match(/^(\w+)$/)){
             keyName = null;
             valueName = null;
             listName = match[1];
-        }else if(match = query.match(/(\w+),(\w)+\s+in\s+(\w+)/)){
+        }else if(match = query.match(/^(\w+),(\w+)\s+in\s+(\w+)$/)){
             keyName = match[1];
             valueName = match[2];
             listName = match[3];
@@ -199,11 +199,11 @@
                     var subList = list[g][groupKey];
                     if(keyName === null){
                         for(var gi in subList){
-                            $group.append('<option value="'+subList[gi]+'">' + subList[gi] + '</option>');
+                            $group.append('<option>' + subList[gi] + '</option>');
                         }
                     }else{
                         for (var gk in subList) {
-                            $group.append('<option value="' + subList[gk][keyName] + '">' + subList[gk]['valueName'] + '</option>');
+                            $group.append('<option value="' + subList[gk][keyName] + '">' + subList[gk][valueName] + '</option>');
                         }
                     }
                     $(element).append($group);
@@ -215,7 +215,7 @@
                     }
                 }else{
                     for (var k in list) {
-                        $(element).append('<option value="' + list[k][keyName] + '">' + list[k]['valueName'] + '</option>');
+                        $(element).append('<option value="' + list[k][keyName] + '">' + list[k][valueName] + '</option>');
                     }
                 }
             }
@@ -249,6 +249,30 @@
         onChangeTasks[onChangeTasks.length-1](null);
         return NODE_STATUS_NORMAL;
     };
+    bindingTypes.jqNot = function(element,model,onChangeTasks){
+        var query;
+        if(typeof(element.getAttribute)!=='function' || !(query = element.getAttribute('jq-not'))){
+            return NODE_STATUS_NORMAL;
+        }
+
+        var startComment = document.createComment('jq-not '+query+' start');
+        var endComment = document.createComment('jq-not '+query+' end');
+        var parent = $(element).parent()[0];
+        parent.insertBefore(startComment,element);
+        if(element.nextElementSibling){
+            parent.insertBefore(endComment,element.nextElementSibling);
+        }else{
+            parent.appendChild(endComment);
+        }
+        onChangeTasks.push(function(){
+            $(element).remove();
+            if(!model.get(query)){
+                $(element).insertAfter(startComment);
+            }
+        });
+        onChangeTasks[onChangeTasks.length-1](null);
+        return NODE_STATUS_NORMAL;
+    };
 
     bindingTypes.jqRepeat = function(element,model,onChangeTasks){
         var query, match;
@@ -270,7 +294,7 @@
 
         var repeatRowDelegate = function(subModel){
             var $row = $(template.replace(/\{\{([\w\.]+)\}\}/g,function(match,key){
-                return subModel.get(key)?subModel.get(key):match;
+                return subModel.get(key)!==null?subModel.get(key):match;
             }));
             $row.removeAttr('jq-repeat');
             var subCtrl = createCtrl(subModel.getData(),$row);
@@ -283,13 +307,13 @@
             var currentNode = startComment.nextSibling;
             while(currentNode !== endComment){
                 currentNode = currentNode.nextSibling;
-                $(currentNode).prev().remove();
+                $(currentNode.previousSibling).remove();
             }
             var list = model.get(modelName);
             for(var i in list){
                 var subModel = model.clone();
-                subModel.getData()[rowName] = list[i];
-                repeatRowDelegate(subModel).insertAfter(startComment);
+                subModel.set(rowName,list[i]);
+                repeatRowDelegate(subModel).insertBefore(endComment);
             }
 
         });
@@ -322,7 +346,7 @@
             var current = model;
             for(var i in keys){
                 current = current[keys[i]];
-                if(!current){
+                if(typeof(current)==='undefined'){
                     return null;
                 }
             }
