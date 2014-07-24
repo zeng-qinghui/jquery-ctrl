@@ -1,4 +1,4 @@
-/*! jQuery Ctrl - v0.1.0 - 2014-07-23
+/*! jQuery Ctrl - v0.1.0 - 2014-07-24
 * https://github.com/zengohm/jquery-ctrl
 * Copyright (c) 2014 Zeng Ohm; Licensed MIT */
 (function (factory) {
@@ -235,33 +235,10 @@
         }else{
             parent.appendChild(endComment);
         }
+        var fun = new Function('model','with(model){return ' + query + ';}');
         onChangeTasks.push(function(){
             $(element).remove();
-            if(model.get(query)){
-                $(element).insertAfter(startComment);
-            }
-        });
-        onChangeTasks[onChangeTasks.length-1](null);
-        return NODE_STATUS_NORMAL;
-    };
-    bindingTypes.jqNot = function(element,model,onChangeTasks){
-        var query;
-        if(typeof(element.getAttribute)!=='function' || !(query = element.getAttribute('jq-not'))){
-            return NODE_STATUS_NORMAL;
-        }
-
-        var startComment = document.createComment('jq-not '+query+' start');
-        var endComment = document.createComment('jq-not '+query+' end');
-        var parent = $(element).parent()[0];
-        parent.insertBefore(startComment,element);
-        if(element.nextElementSibling){
-            parent.insertBefore(endComment,element.nextElementSibling);
-        }else{
-            parent.appendChild(endComment);
-        }
-        onChangeTasks.push(function(){
-            $(element).remove();
-            if(!model.get(query)){
+            if(fun(model.getData())){
                 $(element).insertAfter(startComment);
             }
         });
@@ -328,7 +305,7 @@
             if (element.getAttribute && (query = element.getAttribute('jq-' + type))) {
                 var match = query.match(/^([\w\.]+)\((.*?)\)$/);
                 var funName = match[1];
-                var params = paramsStringDecode(match[2]);
+                var params = eval('['+match[2]+']');
                 $(element).bind(type, action(this,funName,params));
             }
         }
@@ -378,85 +355,5 @@
         this.clone = function(){
             return new ModelObject($.extend(true,{},model));
         };
-    };
-
-    var paramsStringDecode = function(paramsString)
-    {
-        var DECODE_STATUS_OUTSIDE = 0;
-        var DECODE_STATUS_MIDDLE = 1;
-        var DECODE_STATUS_STRING = 2;
-        var DECODE_STATUS_NUMBER = 3;
-        var DECODE_STATUS_VARIABLE = 4;
-        var i = 0;
-        var lastQuotes;
-        var status = DECODE_STATUS_OUTSIDE;
-        var char;
-        while(i<paramsString.length){
-            char = paramsString[i];
-            switch(status){
-                case DECODE_STATUS_OUTSIDE:
-                    if(char === ' ') {
-                        i++;
-                    }else if(char === '"' || char ==="'") {
-                        status = DECODE_STATUS_STRING;
-                        lastQuotes = char;
-                        paramsString = paramsString.substr(0,i)+'"'+paramsString.substr(i+1);
-                        i++;
-                    }else if(char>='0' && char<='9'){
-                        status = DECODE_STATUS_NUMBER;
-                    }else if(char.match(/\w/)) {
-                        status = DECODE_STATUS_VARIABLE;
-                    }
-                    break;
-                case DECODE_STATUS_NUMBER:
-                    if(char>='0' && char<='9'){
-                        var store = paramsString.substr(i).indexOf(',');
-                        if(store===-1){
-                            i = paramsString.length;
-                        }else{
-                            i+=store;
-                            status = DECODE_STATUS_MIDDLE;
-                        }
-                    }
-                    break;
-                case DECODE_STATUS_STRING:
-                    if(char === lastQuotes && paramsString[i-1] !== '\\'){
-                        status = DECODE_STATUS_MIDDLE;
-                        paramsString = paramsString.substr(0,i)+'"'+paramsString.substr(i+1);
-                    }
-                    i++;
-                    break;
-                case DECODE_STATUS_VARIABLE:
-                    var match = paramsString.substr(i).match(/^[\w\.]+/);
-                    paramsString = paramsString.substr(0,i) + '"__jq_ctrl_match_variable_' + match[0] + '"' + paramsString.substr(i+match[0].length);
-                    i += match[0].length;
-                    i += '"__jq_ctrl_match_variable_"'.length;
-                    status = DECODE_STATUS_MIDDLE;
-                    break;
-                case DECODE_STATUS_MIDDLE:
-                    if(char === ' '){
-                        i++;
-                    }else if(char === ','){
-                        status = DECODE_STATUS_OUTSIDE;
-                        i++;
-                    }else{
-                        throw new Error('Params cannot be decode');
-                    }
-                    break;
-                default:
-                    throw new Error('Should never happened');
-            }
-        }
-        var params = $.parseJSON('['+paramsString+']');
-        var windowModule = new ModelObject(window);
-        for(i = 0;i<params.length;i++){
-            if(typeof(params[i])==='string') {
-                var var_match = params[i].match(/^__jq_ctrl_match_variable_([\w\.]+)$/);
-                if (var_match) {
-                    params[i] = windowModule.get(var_match[1]);
-                }
-            }
-        }
-        return params;
     };
 }));

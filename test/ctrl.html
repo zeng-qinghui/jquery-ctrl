@@ -32,11 +32,11 @@
       <div id="qunit-if" jq-ctrl="test-if">
           <div class="common">
               <div jq-if="testBoolTrue">True</div>
-              <div jq-not="testBoolTrue">False</div>
+              <div jq-if="!testBoolTrue">False</div>
           </div>
           <div class="object">
               <div jq-if="testBoolObjectTrue.value">True</div>
-              <div jq-not="testBoolObjectTrue.value">False</div>
+              <div jq-if="!testBoolObjectTrue.value">False</div>
           </div>
       </div>
       <div id="qunit-repeat" jq-ctrl="test-repeat">

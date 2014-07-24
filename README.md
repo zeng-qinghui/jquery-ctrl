@@ -73,17 +73,17 @@ You will get
 
 If you type in the input, the word 'World' will change on the same time.
 
-### If / Not
+### If
 ```html
 <div jq-ctrl="myCtrl">
   I feel
-  <span jq-if="fine">good</span>
-  <span jq-not="fine">not good</span>
+  <span jq-if="happyPoint>5">good</span>
+  <span jq-if="happyPoint<=5">not good</span>
 </div>
 <script>
 jQuery(function($) {
   $.ctrl('myCtrl',function(model){
-    model.fine = true;
+    model.happyPoint = 7;
   });
 });
 </script>

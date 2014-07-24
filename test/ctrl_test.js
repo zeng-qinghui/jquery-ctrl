@@ -55,7 +55,6 @@
         setup:function(){
             $.ctrl('test-if',function(model){
                 model.testBoolTrue = true;
-
                 model.testBoolObjectTrue = {value:true};
             });
         }
