@@ -1,8 +1,8 @@
 {
   "name": "ctrl",
   "title": "jQuery Ctrl",
-  "description": "A simple, lightweight jQuery plugin for model binding",
-  "version": "0.1.0",
+  "description": "A jQuery plugin for model binding and event binding, looks like angular",
+  "version": "0.1.0-1",
   "homepage": "https://github.com/zengohm/jquery-ctrl",
   "author": {
     "name": "Zeng Ohm",

@@ -1,4 +1,4 @@
-/*! jQuery Ctrl - v0.1.0 - 2014-07-24
+/*! jQuery Ctrl - v0.1.0 - 2014-07-27
 * https://github.com/zengohm/jquery-ctrl
 * Copyright (c) 2014 Zeng Ohm; Licensed MIT */
 (function (factory) {
@@ -291,14 +291,16 @@
         onChangeTasks[onChangeTasks.length-1](null);
         return NODE_STATUS_COVER;
     };
-    bindingTypes.jqClick = function(element,model,onChangeTasks){
+    bindingTypes.jqEvent = function(element,model,onChangeTasks){
         var types = ['click','keypress','keyup','keydown','dbclick','mousedown','mouseup','onmouseover','onmousemove','onmouseout'];
         var query;
         var action = function(scope,funName,params){
-            model.get(funName).apply(scope, params);
-            for (var i in onChangeTasks) {
-                onChangeTasks[i](scope);
-            }
+            return function() {
+                model.get(funName).apply(scope, params);
+                for (var i in onChangeTasks) {
+                    onChangeTasks[i](scope);
+                }
+            };
         };
         for(var i in types) {
             var type = types[i];
