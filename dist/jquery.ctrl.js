@@ -1,4 +1,4 @@
-/*! jQuery Ctrl - v0.1.0 - 2014-07-27
+/*! jQuery Ctrl - v0.1.0-1 - 2014-08-01
 * https://github.com/zengohm/jquery-ctrl
 * Copyright (c) 2014 Zeng Ohm; Licensed MIT */
 (function (factory) {
@@ -28,15 +28,29 @@
 
     // Static method.
     $.ctrl = function (ctrlName, init) {
-        var modelData = {};
+        var root = $('[jq-ctrl="' + ctrlName + '"]');
+        if(root.length===0){
+            return false;
+        }
+        var thisCtrl = {};
+        var modelData = {
+            __refresh_binding__:function(){
+                if(thisCtrl && thisCtrl.onChangeTasks){
+                    for(var i = 0;i<thisCtrl.onChangeTasks.length;i++){
+                        thisCtrl.onChangeTasks[i]();
+                    }
+                }
+            }
+        };
         init(modelData);
-        var thisCtrl = createCtrl(modelData,$('[jq-ctrl="' + ctrlName + '"]'));
+        thisCtrl = createCtrl(modelData,root);
         bindingInit(thisCtrl);
+        return true;
     };
 
-    var bindingInit = function (thisCtrl) {
+    var bindingInit = function (thisCtrl,parentOnchangeTasks) {
         thisCtrl.bindings = [];
-        thisCtrl.onChangeTasks = [];
+        thisCtrl.onChangeTasks = parentOnchangeTasks?parentOnchangeTasks:[];
         var elementArray = [];
         var initElement = function ($element) {
             $element.contents().andSelf().each(function () {
@@ -58,6 +72,52 @@
         initElement(thisCtrl.ctrl);
     };
 
+    bindingTypes.jqRepeat = function(element,model,onChangeTasks){
+        var query, match;
+        if(typeof(element.getAttribute)!=='function' || !(query = element.getAttribute('jq-repeat')) || !(match = query.match(/(\w+)\s+in\s+([\w\.]+)/))){
+            return NODE_STATUS_NORMAL;
+        }
+        var modelName = match[2];
+        var rowName = match[1];
+        var startComment = document.createComment('jq-if '+query+' start');
+        var endComment = document.createComment('jq-if '+query+' end');
+        var template = $(element).prop('outerHTML');
+        var parent = $(element).parent()[0];
+        parent.insertBefore(startComment,element);
+        if(element.nextElementSibling){
+            parent.insertBefore(endComment,element.nextElementSibling);
+        }else{
+            parent.appendChild(endComment);
+        }
+
+        var repeatRowDelegate = function(subModel){
+            var $row = $(template.replace(/\{\{([\w\.]+)\}\}/g,function(match,key){
+                return subModel.get(key)!==null?subModel.get(key):match;
+            }));
+            $row.removeAttr('jq-repeat');
+            var subCtrl = createCtrl(subModel.getData(),$row);
+            bindingInit(subCtrl, onChangeTasks);
+            return $row;
+        };
+
+
+        onChangeTasks.push(function(){
+            var currentNode = startComment.nextSibling;
+            while(currentNode !== endComment){
+                currentNode = currentNode.nextSibling;
+                $(currentNode.previousSibling).remove();
+            }
+            var list = model.get(modelName);
+            for(var i in list){
+                var subModel = model.clone();
+                subModel.set(rowName,list[i]);
+                repeatRowDelegate(subModel).insertBefore(endComment);
+            }
+
+        });
+        onChangeTasks[onChangeTasks.length-1](null);
+        return NODE_STATUS_COVER;
+    };
 
     bindingTypes.text = function(node,model,onChangeTasks){
         if(node.nodeName.substr(0,1)==='#' && node.data.match(/\{\{[\w\.]+\}\}/)){
@@ -79,11 +139,20 @@
                 if(element === srcElement){
                     return false;
                 }
-                $(element).val(model.get(modelName));
+                if(element.type==='checkbox'){
+                    $(element).attr({'checked':model.get(modelName)?'checked':false});
+                }else {
+                    $(element).val(model.get(modelName));
+                }
             });
             onChangeTasks[onChangeTasks.length-1]();
             $(element).bind('keypress change keyup',function(){
-                model.set(modelName,$(this).val());
+                if(this.type==='checkbox') {
+                    model.set(modelName, this.checked);
+                }else{
+                    model.set(modelName, $(this).val());
+                }
+
                 for(var i in onChangeTasks){
                     onChangeTasks[i](this);
                 }
@@ -237,69 +306,26 @@
         }
         var fun = new Function('model','with(model){return ' + query + ';}');
         onChangeTasks.push(function(){
-            $(element).remove();
+            $(element).remove(null,true);
             if(fun(model.getData())){
                 $(element).insertAfter(startComment);
+
             }
         });
         onChangeTasks[onChangeTasks.length-1](null);
         return NODE_STATUS_NORMAL;
     };
-    bindingTypes.jqRepeat = function(element,model,onChangeTasks){
-        var query, match;
-        if(typeof(element.getAttribute)!=='function' || !(query = element.getAttribute('jq-repeat')) || !(match = query.match(/(\w+)\s+in\s+([\w\.]+)/))){
-            return NODE_STATUS_NORMAL;
-        }
-        var modelName = match[2];
-        var rowName = match[1];
-        var startComment = document.createComment('jq-if '+query+' start');
-        var endComment = document.createComment('jq-if '+query+' end');
-        var template = $(element).prop('outerHTML');
-        var parent = $(element).parent()[0];
-        parent.insertBefore(startComment,element);
-        if(element.nextElementSibling){
-            parent.insertBefore(endComment,element.nextElementSibling);
-        }else{
-            parent.appendChild(endComment);
-        }
 
-        var repeatRowDelegate = function(subModel){
-            var $row = $(template.replace(/\{\{([\w\.]+)\}\}/g,function(match,key){
-                return subModel.get(key)!==null?subModel.get(key):match;
-            }));
-            $row.removeAttr('jq-repeat');
-            var subCtrl = createCtrl(subModel.getData(),$row);
-            bindingInit(subCtrl);
-            return $row;
-        };
-
-
-        onChangeTasks.push(function(){
-            var currentNode = startComment.nextSibling;
-            while(currentNode !== endComment){
-                currentNode = currentNode.nextSibling;
-                $(currentNode.previousSibling).remove();
-            }
-            var list = model.get(modelName);
-            for(var i in list){
-                var subModel = model.clone();
-                subModel.set(rowName,list[i]);
-                repeatRowDelegate(subModel).insertBefore(endComment);
-            }
-
-        });
-        onChangeTasks[onChangeTasks.length-1](null);
-        return NODE_STATUS_COVER;
-    };
     bindingTypes.jqEvent = function(element,model,onChangeTasks){
-        var types = ['click','keypress','keyup','keydown','dbclick','mousedown','mouseup','onmouseover','onmousemove','onmouseout'];
+        var types = ['click','keypress','keyup','keydown','dbclick','mousedown','mouseup','mouseover','mousemove','mouseout','change','submit'];
         var query;
         var action = function(scope,funName,params){
             return function() {
-                model.get(funName).apply(scope, params);
+                var rVal = model.get(funName).apply(scope, params);
                 for (var i in onChangeTasks) {
                     onChangeTasks[i](scope);
                 }
+                return rVal;
             };
         };
         for(var i in types) {
